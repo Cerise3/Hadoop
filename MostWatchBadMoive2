@@ -1,0 +1,29 @@
+//I realized I didn't need everything I was grabbing or was written previously
+
+ratings = LOAD '/user/maria_dev/ml-100k/u.data' AS (userID:int, movieID:int, rating:int);
+//file tab delimited so no need to specify, only taking what I need
+
+metadata = LOAD '/user/maria_dev/ml-100k/u.item' USING PigStorage('|') AS (mID:int, mTitle:chararray);
+//file pipe delimited, only taking what I need
+
+ratingByMovie = GROUP ratings BY movieID;
+//grouping the movies by the id, movieID was changed to group?
+
+avgRatings = FOREACH ratingByMovie GENERATE group AS movieID, 
+	AVG(ratings.rating) AS avgRating, COUNT(ratings.rating) AS rCount;
+//getting the average rating and the number of times a movie was rated, re-naming group as movieID
+
+oneStar = FILTER avgRatings BY avgRating < 2.0;
+//keeping only ratings less than 2
+
+oneStarData = JOIN oneStar BY movieID, metadata BY mID;
+//join the two lists by the movieID/mID repectively
+
+FaveWorst = ORDER oneStarData BY oneStar::rCount DESC;
+//decsending order by count
+
+DESCRIBE FaveWorst;
+//I add this because it provides a listing of which number corresponds to which variable
+
+DUMP FaveWorst;
+//print
